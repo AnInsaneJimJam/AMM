@@ -105,14 +105,14 @@ contract AMM is ReentrancyGuard {
         _mintShares(msg.sender, shares);    
     }
 
-    function removeLiquidity(address user, uint256 sharesToBurn) public moreThanZero(shares) {
+    function removeLiquidity(address user, uint256 sharesToBurn) public moreThanZero(sharesToBurn) {
         require(numberOfShares[user] >= sharesToBurn, AMM__InsufficientSharesToBurn());
-        uint256 tokenAout = (reserveOfTokenA*sharesToBurn)/totalShares;
-        uint256 tokenBout = (reserveOfTokenA*sharesToBurn)/totalShares;
+        uint256 tokenAOut = (reserveOfTokenA*sharesToBurn)/totalShares;
+        uint256 tokenBOut = (reserveOfTokenA*sharesToBurn)/totalShares;
         tokenA.transfer(user,tokenAOut);
         tokenB.transfer(user,tokenBOut);
         _burnShares(user, sharesToBurn);
-        _updateReserve(reserveOfTokenA-tokenAout, reserveOfTokenB-tokenBout);
+        _updateReserve(reserveOfTokenA-tokenAOut, reserveOfTokenB-tokenBOut);
     }
 
     // Taken from uinswap V2 diocs
