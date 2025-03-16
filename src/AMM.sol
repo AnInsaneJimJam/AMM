@@ -10,14 +10,14 @@ contract AMM is ReentrancyGuard {
     error AMM__InvalidToken(address token);
     error AMM__InsufficientLiquidity();
 
-    IERC20 public tokenA;
-    IERC20 public tokenB;
+    IERC20 public immutable tokenA;
+    IERC20 public immutable tokenB;
 
     address public addressOfTokenA = address(tokenA);
     address public addressOfTokenB = address(tokenB);
 
-    // uint256 public balanceOfTokenA;
-    // uint256 public balanceOfTokenB;
+    uint256 public reserveOfTokenA;
+    uint256 public reserveOfTokenB;
     uint256 public totalShares;
 
     mapping(address user => uint256 shares) numberOfShares;
@@ -62,6 +62,8 @@ contract AMM is ReentrancyGuard {
         }
         IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn);
         IERC20(tokenOut).transferFrom(address(this), msg.sender, amountOut);
+
+        _updateReserve(tokenA.balanceOf(address(this)), tokenB.balanceOf(address(this)));
     }
 
     function _selectSides(address tokenIn)
@@ -71,12 +73,17 @@ contract AMM is ReentrancyGuard {
     {
         if (tokenIn == addressOfTokenA) {
             tokenOut = addressOfTokenB;
-            reserveIn = tokenA.balanceOf(address(this));
-            reserveOut = tokenB.balanceOf(address(this));
+            reserveIn = reserveOfTokenA;
+            reserveOut = reserveOfTokenB;
         } else {
             tokenOut = addressOfTokenA;
-            reserveIn = tokenB.balanceOf(address(this));
-            reserveOut = tokenA.balanceOf(address(this));
+            reserveIn = reserveOfTokenB;
+            reserveOut = reserveOfTokenA;
         }
+    }
+
+    function _updateReserve(uint256 _reserveA, uint256 _reserveB) internal {
+        reserveOfTokenA = _reserveA;
+        reserveOfTokenB = _reserveB;
     }
 }
