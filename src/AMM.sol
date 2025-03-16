@@ -73,12 +73,19 @@ contract AMM is ReentrancyGuard {
         reserveOfTokenB = _reserveB;
     }
 
-    function initialLiquidity(uint256 amountA, uint256 amountB) public moreThanZero(amountA) moreThanZero(amountB) nonReentrant returns (uint256 initialShares){
+    function initialLiquidity(uint256 amountA, uint256 amountB)
+        public
+        moreThanZero(amountA)
+        moreThanZero(amountB)
+        nonReentrant
+        returns (uint256 initialShares)
+    {
         require(reserveOfTokenA == 0 && reserveOfTokenB == 0, AMM__LiquidityAlreadySetUp());
-        initialShares = sqrt(amountA*amountB);
-        _mintShares(msg.sender,initialShares);
+        initialShares = sqrt(amountA * amountB);
+        _mintShares(msg.sender, initialShares);
         _updateReserve(amountA, amountB);
-
+        tokenA.transferFrom(msg.sender, address(this), amountA);
+        tokenB.transferFrom(msg.sender, address(this), amountB);
     }
 
     function swap(address tokenIn, uint256 amountIn)
@@ -94,39 +101,49 @@ contract AMM is ReentrancyGuard {
             revert AMM__InsufficientLiquidity();
         }
         IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn);
-        IERC20(tokenOut).transferFrom(address(this), msg.sender, amountOut);
+        IERC20(tokenOut).transfer(msg.sender, amountOut);
 
         _updateReserve(tokenA.balanceOf(address(this)), tokenB.balanceOf(address(this)));
     }
 
-    function addLiquidity(uint256 amountA, uint256 amountB) public moreThanZero(amountA) moreThanZero(amountB)  nonReentrant returns(uint256 shares) {
-        require(amountA/amountB == reserveOfTokenA/reserveOfTokenB, AMM__IncorrectRatioOfTokenProvidedForLiquidity());
-        shares = (amountA/reserveOfTokenA)*totalShares;
-        _updateReserve(amountA+reserveOfTokenA, amountB+reserveOfTokenB);
-        _mintShares(msg.sender, shares);    
+    function addLiquidity(uint256 amountA, uint256 amountB)
+        public
+        moreThanZero(amountA)
+        moreThanZero(amountB)
+        nonReentrant
+        returns (uint256 shares)
+    {
+        require(
+            amountA / amountB == reserveOfTokenA / reserveOfTokenB, AMM__IncorrectRatioOfTokenProvidedForLiquidity()
+        );
+        shares = (amountA / reserveOfTokenA) * totalShares;
+        _updateReserve(amountA + reserveOfTokenA, amountB + reserveOfTokenB);
+        _mintShares(msg.sender, shares);
+        tokenA.transferFrom(msg.sender, address(this), amountA);
+        tokenB.transferFrom(msg.sender, address(this), amountB);
     }
 
-    function removeLiquidity(address user, uint256 sharesToBurn) public moreThanZero(sharesToBurn) nonReentrant{
+    function removeLiquidity(address user, uint256 sharesToBurn) public moreThanZero(sharesToBurn) nonReentrant {
         require(numberOfShares[user] >= sharesToBurn, AMM__InsufficientSharesToBurn());
-        uint256 tokenAOut = (reserveOfTokenA*sharesToBurn)/totalShares;
-        uint256 tokenBOut = (reserveOfTokenA*sharesToBurn)/totalShares;
-        tokenA.transfer(user,tokenAOut);
-        tokenB.transfer(user,tokenBOut);
+        uint256 tokenAOut = (reserveOfTokenA * sharesToBurn) / totalShares;
+        uint256 tokenBOut = (reserveOfTokenA * sharesToBurn) / totalShares;
+        tokenA.transfer(user, tokenAOut);
+        tokenB.transfer(user, tokenBOut);
         _burnShares(user, sharesToBurn);
-        _updateReserve(reserveOfTokenA-tokenAOut, reserveOfTokenB-tokenBOut);
+        _updateReserve(reserveOfTokenA - tokenAOut, reserveOfTokenB - tokenBOut);
     }
 
     // Taken from uinswap V2 diocs
-    function sqrt(uint y) internal pure returns (uint z) {
-    if (y > 3) {
-        z = y;
-        uint x = y / 2 + 1;
-        while (x < z) {
-            z = x;
-            x = (y / x + x) / 2;
+    function sqrt(uint256 y) internal pure returns (uint256 z) {
+        if (y > 3) {
+            z = y;
+            uint256 x = y / 2 + 1;
+            while (x < z) {
+                z = x;
+                x = (y / x + x) / 2;
+            }
+        } else if (y != 0) {
+            z = 1;
         }
-    } else if (y != 0) {
-        z = 1;
     }
-}
 }
