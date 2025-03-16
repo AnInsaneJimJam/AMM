@@ -8,12 +8,16 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract AMM is ReentrancyGuard {
     error AMM__ShouldBeMoreThanZero();
     error AMM__InvalidToken(address token);
+    error AMM__InsufficientLiquidity();
 
     IERC20 public tokenA;
     IERC20 public tokenB;
 
-    uint256 public balanceOfTokenA;
-    uint256 public balanceOfTokenB;
+    address public addressOfTokenA = address(tokenA);
+    address public addressOfTokenB = address(tokenB);
+
+    // uint256 public balanceOfTokenA;
+    // uint256 public balanceOfTokenB;
     uint256 public totalShares;
 
     mapping(address user => uint256 shares) numberOfShares;
@@ -24,7 +28,7 @@ contract AMM is ReentrancyGuard {
     }
 
     modifier validToken(address token) {
-        if (token == address(0) || (token != address(tokenA) && token != address(tokenB))) {
+        if (token == address(0) || (token != addressOfTokenA && token != addressOfTokenB)) {
             revert AMM__InvalidToken(token);
         }
         _;
@@ -45,5 +49,34 @@ contract AMM is ReentrancyGuard {
         totalShares -= amount;
     }
 
-    function swap(address tokenIn, uint256 amountIn) public moreThanZero(amountIn) returns (uint256 amountOut) {}
+    function swap(address tokenIn, uint256 amountIn)
+        public
+        moreThanZero(amountIn)
+        validToken(tokenIn)
+        returns (uint256 amountOut)
+    {
+        (address tokenOut, uint256 reserveIn, uint256 reserveOut) = _selectSides(tokenIn);
+        amountOut = (reserveOut * amountIn) / (reserveIn + amountIn);
+        if (amountOut >= reserveOut) {
+            revert AMM__InsufficientLiquidity();
+        }
+        IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn);
+        IERC20(tokenOut).transferFrom(address(this), msg.sender, amountOut);
+    }
+
+    function _selectSides(address tokenIn)
+        internal
+        view
+        returns (address tokenOut, uint256 reserveIn, uint256 reserveOut)
+    {
+        if (tokenIn == addressOfTokenA) {
+            tokenOut = addressOfTokenB;
+            reserveIn = tokenA.balanceOf(address(this));
+            reserveOut = tokenB.balanceOf(address(this));
+        } else {
+            tokenOut = addressOfTokenA;
+            reserveIn = tokenB.balanceOf(address(this));
+            reserveOut = tokenA.balanceOf(address(this));
+        }
+    }
 }
