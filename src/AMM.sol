@@ -73,7 +73,7 @@ contract AMM is ReentrancyGuard {
         reserveOfTokenB = _reserveB;
     }
 
-    function initialLiquidity(uint256 amountA, uint256 amountB) public moreThanZero(amountA) moreThanZero(amountB) returns (uint256 initialShares){
+    function initialLiquidity(uint256 amountA, uint256 amountB) public moreThanZero(amountA) moreThanZero(amountB) nonReentrant returns (uint256 initialShares){
         require(reserveOfTokenA == 0 && reserveOfTokenB == 0, AMM__LiquidityAlreadySetUp());
         initialShares = sqrt(amountA*amountB);
         _mintShares(msg.sender,initialShares);
@@ -85,6 +85,7 @@ contract AMM is ReentrancyGuard {
         public
         moreThanZero(amountIn)
         validToken(tokenIn)
+        nonReentrant
         returns (uint256 amountOut)
     {
         (address tokenOut, uint256 reserveIn, uint256 reserveOut) = _selectSides(tokenIn);
@@ -98,14 +99,14 @@ contract AMM is ReentrancyGuard {
         _updateReserve(tokenA.balanceOf(address(this)), tokenB.balanceOf(address(this)));
     }
 
-    function addLiquidity(uint256 amountA, uint256 amountB) public moreThanZero(amountA) moreThanZero(amountB) returns (uint256 shares){
+    function addLiquidity(uint256 amountA, uint256 amountB) public moreThanZero(amountA) moreThanZero(amountB)  nonReentrant returns(uint256 shares) {
         require(amountA/amountB == reserveOfTokenA/reserveOfTokenB, AMM__IncorrectRatioOfTokenProvidedForLiquidity());
         shares = (amountA/reserveOfTokenA)*totalShares;
         _updateReserve(amountA+reserveOfTokenA, amountB+reserveOfTokenB);
         _mintShares(msg.sender, shares);    
     }
 
-    function removeLiquidity(address user, uint256 sharesToBurn) public moreThanZero(sharesToBurn) {
+    function removeLiquidity(address user, uint256 sharesToBurn) public moreThanZero(sharesToBurn) nonReentrant{
         require(numberOfShares[user] >= sharesToBurn, AMM__InsufficientSharesToBurn());
         uint256 tokenAOut = (reserveOfTokenA*sharesToBurn)/totalShares;
         uint256 tokenBOut = (reserveOfTokenA*sharesToBurn)/totalShares;
