@@ -58,6 +58,6 @@ contract AMMTest is Test {
     function test_RevertIfUserAddLiquidityWithIncorrectRatio() public{
         vm.startPrank(USER);
         vm.expectRevert(AMM.AMM__IncorrectRatioOfTokenProvidedForLiquidity.selector);
-        amm.addLiquidity(amountA+1 ether, amountB);
+        amm.addLiquidity(amountA+ 1 ether, amountB);
     }
 }
