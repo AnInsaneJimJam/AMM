@@ -126,13 +126,13 @@ contract AMM is ReentrancyGuard {
         tokenB.transferFrom(msg.sender, address(this), amountB);
     }
 
-    function removeLiquidity(address user, uint256 sharesToBurn) public moreThanZero(sharesToBurn) nonReentrant {
-        require(numberOfShares[user] >= sharesToBurn, AMM__InsufficientSharesToBurn());
+    function removeLiquidity(uint256 sharesToBurn) public moreThanZero(sharesToBurn) nonReentrant {
+        require(numberOfShares[msg.sender] >= sharesToBurn, AMM__InsufficientSharesToBurn());
         uint256 tokenAOut = (reserveOfTokenA * sharesToBurn) / totalShares;
         uint256 tokenBOut = (reserveOfTokenA * sharesToBurn) / totalShares;
-        tokenA.transfer(user, tokenAOut);
-        tokenB.transfer(user, tokenBOut);
-        _burnShares(user, sharesToBurn);
+        tokenA.transfer(msg.sender, tokenAOut);
+        tokenB.transfer(msg.sender, tokenBOut);
+        _burnShares(msg.sender, sharesToBurn);
         _updateReserve(reserveOfTokenA - tokenAOut, reserveOfTokenB - tokenBOut);
     }
 
