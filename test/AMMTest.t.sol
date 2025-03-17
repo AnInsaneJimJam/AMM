@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import {Test} from "forge-std/Test.sol";
+import {Test,console} from "forge-std/Test.sol";
 import {AMM} from "../src/AMM.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {DeployAMM} from "../script/DeployAMM.s.sol";
@@ -14,8 +14,8 @@ contract AMMTest is Test {
 
     address public constant USER = address(1);
     uint256 public constant INITIAL_BALANCE = 1000 ether;
-    uint256 amountA = 100 ether;
-    uint256 amountB = 100 ether;
+    uint256 public constant amountA = 100 ether;
+    uint256 public constant amountB = 100 ether;
 
     function setUp() public {
         deployer = new DeployAMM();
@@ -37,10 +37,29 @@ contract AMMTest is Test {
         amm.initialLiquidity(amountA, amountB);
     }
 
-    function test_InitialLiquidityAndReserveSetup() public {
+    ///////////// InitialLiquidity Test //////////
+    function test_InitialLiquidityAndReserveSetup() public view {
         assertEq(amm.reserveOfTokenA(), amountA);
         assertEq(amm.reserveOfTokenB(), amountB);
         assertEq(amm.getTotalShares(), amm.sqrt(amountA * amountB));
         assertEq(amm.getNumberOfShares(address(this)), amm.sqrt(amountA * amountB));
+    }
+    
+    //////////// Add Liquidity Test ///////////// 
+
+    function test_UserAddLiquidityInCorrectRatio() public {
+        vm.prank(USER);
+        amm.addLiquidity(amountA, amountB);
+        assertEq(amm.reserveOfTokenA(), 2*amountA);
+        assertEq(amm.reserveOfTokenB(), 2*amountB);
+        assertEq(amm.getNumberOfShares(USER),100 ether);
+    }
+
+    function test_RevertIfUserAddLiquidityWithIncorrectRatio() public{
+        vm.startPrank(USER);
+        console.log(amm.reserveOfTokenA()/amm.reserveOfTokenB());
+        console.log(amountA+1/amountB);
+        vm.expectRevert(AMM.AMM__IncorrectRatioOfTokenProvidedForLiquidity.selector);
+        amm.addLiquidity(amountA+1 ether, amountB);
     }
 }
