@@ -21,9 +21,9 @@ contract AMM is ReentrancyGuard {
 
     uint256 public reserveOfTokenA;
     uint256 public reserveOfTokenB;
-    uint256 public totalShares;
+    uint256 private totalShares;
 
-    mapping(address user => uint256 shares) numberOfShares;
+    mapping(address user => uint256 shares) private numberOfShares;
 
     modifier moreThanZero(uint256 amount) {
         require(amount > 0, AMM__ShouldBeMoreThanZero());
@@ -81,7 +81,7 @@ contract AMM is ReentrancyGuard {
         returns (uint256 initialShares)
     {
         require(reserveOfTokenA == 0 && reserveOfTokenB == 0, AMM__LiquidityAlreadySetUp());
-        initialShares = sqrt(amountA * amountB);
+        initialShares = _sqrt(amountA * amountB);
         _mintShares(msg.sender, initialShares);
         _updateReserve(amountA, amountB);
         tokenA.transferFrom(msg.sender, address(this), amountA);
@@ -134,7 +134,7 @@ contract AMM is ReentrancyGuard {
     }
 
     // Taken from uinswap V2 diocs
-    function sqrt(uint256 y) internal pure returns (uint256 z) {
+    function _sqrt(uint256 y) internal pure returns (uint256 z) {
         if (y > 3) {
             z = y;
             uint256 x = y / 2 + 1;
@@ -145,5 +145,19 @@ contract AMM is ReentrancyGuard {
         } else if (y != 0) {
             z = 1;
         }
+    }
+
+    ////////////////GETTERS//////////////////////\
+
+    function sqrt(uint256 y) public pure returns (uint256 z){
+        z = _sqrt(y);
+    }
+
+    function getNumberOfShares(address user) public view returns(uint256 shares){
+        shares = numberOfShares[user];
+    }
+
+    function getTotalShares() public view returns(uint256 ){
+        return totalShares;
     }
 }
