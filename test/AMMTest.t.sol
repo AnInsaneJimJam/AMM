@@ -96,12 +96,27 @@ contract AMMTest is Test {
         console.log(expectedTokenA); // 50 ether
         console.log(expectedTokenB); // 50 ether
 
-        amm.removeLiquidity(address(this), sharesToBurn);
+        amm.removeLiquidity(sharesToBurn);
 
         assertEq(tokenA.balanceOf(address(this)), INITIAL_BALANCE - amountA + expectedTokenA);
         assertEq(tokenB.balanceOf(address(this)), INITIAL_BALANCE - amountB + expectedTokenB);
         assertEq(amm.reserveOfTokenA(), amountA - expectedTokenA);
         assertEq(amm.reserveOfTokenB(), amountB - expectedTokenB);
         assertEq(amm.getTotalShares(), amm.sqrt(amountA * amountB) - sharesToBurn);
+    }
+
+    function test_RevertIf_RemoveLiquidityWithInsufficientShares() public {
+        uint256 sharesToBurn = amm.getNumberOfShares(address(this)) + 1;
+
+        vm.expectRevert(AMM.AMM__InsufficientSharesToBurn.selector);
+        amm.removeLiquidity(sharesToBurn);
+    }
+
+    function test_RevertIf_RemoveLiquidityByNonOwner() public {
+        uint256 sharesToBurn = amm.getNumberOfShares(address(this)) / 2;
+
+        vm.prank(USER);
+        vm.expectRevert(AMM.AMM__InsufficientSharesToBurn.selector);
+        amm.removeLiquidity(sharesToBurn);
     }
 }
