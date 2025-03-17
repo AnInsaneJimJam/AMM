@@ -113,9 +113,7 @@ contract AMM is ReentrancyGuard {
         nonReentrant
         returns (uint256 shares)
     {
-        require(
-            amountA / amountB == reserveOfTokenA / reserveOfTokenB, AMM__IncorrectRatioOfTokenProvidedForLiquidity()
-        );
+        require(amountA * reserveOfTokenB == amountB * reserveOfTokenA, AMM__IncorrectRatioOfTokenProvidedForLiquidity());
         shares = (amountA / reserveOfTokenA) * totalShares;
         _updateReserve(amountA + reserveOfTokenA, amountB + reserveOfTokenB);
         _mintShares(msg.sender, shares);
