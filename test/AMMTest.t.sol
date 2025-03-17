@@ -44,6 +44,12 @@ contract AMMTest is Test {
         assertEq(amm.getTotalShares(), amm.sqrt(amountA * amountB));
         assertEq(amm.getNumberOfShares(address(this)), amm.sqrt(amountA * amountB));
     }
+
+    function test_RevertIf_InitialLiquidityAlreadySetup() public {
+
+        vm.expectRevert(AMM.AMM__LiquidityAlreadySetUp.selector);
+        amm.initialLiquidity(amountA, amountB);
+    }
     
     //////////// Add Liquidity Test ///////////// 
 
@@ -60,4 +66,19 @@ contract AMMTest is Test {
         vm.expectRevert(AMM.AMM__IncorrectRatioOfTokenProvidedForLiquidity.selector);
         amm.addLiquidity(amountA+ 1 ether, amountB);
     }
-}
+
+    //////////// Swap Tests /////////////
+
+    function test_SwapTokenAForTokenB() public {
+        uint256 swapAmount = 10 ether;
+        uint256 expectedOutput = (amountB * swapAmount) / (amountA + swapAmount);
+        console.log(expectedOutput);
+
+        amm.swap(address(tokenA), swapAmount);
+
+        assertEq(amm.reserveOfTokenA(), amountA + swapAmount);
+        assertEq(amm.reserveOfTokenB(), amountB - expectedOutput);
+        assertEq(tokenB.balanceOf(address(this)), INITIAL_BALANCE - amountB + expectedOutput);
+    }
+
+    }
