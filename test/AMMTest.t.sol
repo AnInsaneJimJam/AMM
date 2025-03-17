@@ -14,6 +14,8 @@ contract AMMTest is Test {
 
     address public constant USER = address(1);
     uint256 public constant INITIAL_BALANCE = 1000 ether;
+    uint256 amountA = 100 ether;
+    uint256 amountB = 100 ether;
 
     function setUp() public {
         deployer = new DeployAMM();
@@ -27,9 +29,18 @@ contract AMMTest is Test {
         tokenA.approve(address(amm), type(uint256).max);
         tokenB.approve(address(amm), type(uint256).max);
 
-        vm.prank(USER);
+        vm.startPrank(USER);
         tokenA.approve(address(amm), type(uint256).max);
-        vm.prank(USER);
         tokenB.approve(address(amm), type(uint256).max);
+        vm.stopPrank();
+
+        amm.initialLiquidity(amountA, amountB);
+    }
+
+    function test_InitialLiquidityAndReserveSetup() public {
+        assertEq(amm.reserveOfTokenA(), amountA);
+        assertEq(amm.reserveOfTokenB(), amountB);
+        assertEq(amm.getTotalShares(), amm.sqrt(amountA * amountB));
+        assertEq(amm.getNumberOfShares(address(this)), amm.sqrt(amountA * amountB));
     }
 }
