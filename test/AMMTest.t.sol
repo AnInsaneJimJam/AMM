@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import {Test,console} from "forge-std/Test.sol";
+import {Test, console} from "forge-std/Test.sol";
 import {AMM} from "../src/AMM.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {DeployAMM} from "../script/DeployAMM.s.sol";
@@ -46,25 +46,24 @@ contract AMMTest is Test {
     }
 
     function test_RevertIf_InitialLiquidityAlreadySetup() public {
-
         vm.expectRevert(AMM.AMM__LiquidityAlreadySetUp.selector);
         amm.initialLiquidity(amountA, amountB);
     }
-    
-    //////////// Add Liquidity Test ///////////// 
+
+    //////////// Add Liquidity Test /////////////
 
     function test_UserAddLiquidityInCorrectRatio() public {
         vm.prank(USER);
         amm.addLiquidity(amountA, amountB);
-        assertEq(amm.reserveOfTokenA(), 2*amountA);
-        assertEq(amm.reserveOfTokenB(), 2*amountB);
-        assertEq(amm.getNumberOfShares(USER),100 ether);
+        assertEq(amm.reserveOfTokenA(), 2 * amountA);
+        assertEq(amm.reserveOfTokenB(), 2 * amountB);
+        assertEq(amm.getNumberOfShares(USER), 100 ether);
     }
 
-    function test_RevertIfUserAddLiquidityWithIncorrectRatio() public{
+    function test_RevertIfUserAddLiquidityWithIncorrectRatio() public {
         vm.startPrank(USER);
         vm.expectRevert(AMM.AMM__IncorrectRatioOfTokenProvidedForLiquidity.selector);
-        amm.addLiquidity(amountA+ 1 ether, amountB);
+        amm.addLiquidity(amountA + 1 ether, amountB);
     }
 
     //////////// Swap Tests /////////////
@@ -81,4 +80,11 @@ contract AMMTest is Test {
         assertEq(tokenB.balanceOf(address(this)), INITIAL_BALANCE - amountB + expectedOutput);
     }
 
+    function test_RevertIfSwapWithInvalidToken() public {
+        uint256 swapAmount = 10 ether;
+        address invalidToken = address(0x123);
+
+        vm.expectRevert(abi.encodeWithSelector(AMM.AMM__InvalidToken.selector, invalidToken));
+        amm.swap(invalidToken, swapAmount);
     }
+}

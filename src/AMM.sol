@@ -16,8 +16,8 @@ contract AMM is ReentrancyGuard {
     IERC20 public immutable tokenA;
     IERC20 public immutable tokenB;
 
-    address public addressOfTokenA ;
-    address public addressOfTokenB ;
+    address public addressOfTokenA;
+    address public addressOfTokenB;
 
     uint256 public reserveOfTokenA;
     uint256 public reserveOfTokenB;
@@ -33,8 +33,7 @@ contract AMM is ReentrancyGuard {
     modifier validToken(address token) {
         if (token == addressOfTokenA || token == addressOfTokenB) {
             _;
-        }
-        else{
+        } else {
             revert AMM__InvalidToken(token);
         }
     }
@@ -117,7 +116,9 @@ contract AMM is ReentrancyGuard {
         nonReentrant
         returns (uint256 shares)
     {
-        require(amountA * reserveOfTokenB == amountB * reserveOfTokenA, AMM__IncorrectRatioOfTokenProvidedForLiquidity());
+        require(
+            amountA * reserveOfTokenB == amountB * reserveOfTokenA, AMM__IncorrectRatioOfTokenProvidedForLiquidity()
+        );
         shares = (amountA / reserveOfTokenA) * totalShares;
         _updateReserve(amountA + reserveOfTokenA, amountB + reserveOfTokenB);
         _mintShares(msg.sender, shares);
