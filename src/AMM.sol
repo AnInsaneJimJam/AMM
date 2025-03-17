@@ -31,10 +31,12 @@ contract AMM is ReentrancyGuard {
     }
 
     modifier validToken(address token) {
-        if (token == address(0) || (token != addressOfTokenA && token != addressOfTokenB)) {
+        if (token == addressOfTokenA || token == addressOfTokenB) {
+            _;
+        }
+        else{
             revert AMM__InvalidToken(token);
         }
-        _;
     }
 
     constructor(address _tokenA, address _tokenB) {
