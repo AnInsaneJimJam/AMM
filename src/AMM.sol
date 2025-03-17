@@ -16,8 +16,8 @@ contract AMM is ReentrancyGuard {
     IERC20 public immutable tokenA;
     IERC20 public immutable tokenB;
 
-    address public addressOfTokenA = address(tokenA);
-    address public addressOfTokenB = address(tokenB);
+    address public addressOfTokenA ;
+    address public addressOfTokenB ;
 
     uint256 public reserveOfTokenA;
     uint256 public reserveOfTokenB;
@@ -42,6 +42,8 @@ contract AMM is ReentrancyGuard {
     constructor(address _tokenA, address _tokenB) {
         tokenA = IERC20(_tokenA);
         tokenB = IERC20(_tokenB);
+        addressOfTokenA = address(tokenA);
+        addressOfTokenB = address(tokenB);
     }
 
     function _mintShares(address to, uint256 amount) internal {
