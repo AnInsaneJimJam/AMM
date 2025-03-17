@@ -149,15 +149,15 @@ contract AMM is ReentrancyGuard {
 
     ////////////////GETTERS//////////////////////\
 
-    function sqrt(uint256 y) public pure returns (uint256 z){
+    function sqrt(uint256 y) public pure returns (uint256 z) {
         z = _sqrt(y);
     }
 
-    function getNumberOfShares(address user) public view returns(uint256 shares){
+    function getNumberOfShares(address user) public view returns (uint256 shares) {
         shares = numberOfShares[user];
     }
 
-    function getTotalShares() public view returns(uint256 ){
+    function getTotalShares() public view returns (uint256) {
         return totalShares;
     }
 }
