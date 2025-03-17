@@ -4,19 +4,20 @@ pragma solidity ^0.8.18;
 import {Test} from "forge-std/Test.sol";
 import {AMM} from "../src/AMM.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
+import {DeployAMM} from "../script/DeployAMM.s.sol";
 
 contract AMMTest is Test {
     AMM public amm;
     ERC20Mock public tokenA;
     ERC20Mock public tokenB;
+    DeployAMM public deployer;
 
     address public constant USER = address(1);
     uint256 public constant INITIAL_BALANCE = 1000 ether;
 
     function setUp() public {
-        tokenA = new ERC20Mock();
-        tokenB = new ERC20Mock();
-        amm = new AMM(address(tokenA), address(tokenB));
+        deployer = new DeployAMM();
+        (amm, tokenA, tokenB) = deployer.run();
 
         tokenA.mint(address(this), INITIAL_BALANCE);
         tokenB.mint(address(this), INITIAL_BALANCE);
